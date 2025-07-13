@@ -7,47 +7,29 @@ class DBClient {
     const dbName = process.env.DB_DATABASE || 'files_manager';
     const url = `mongodb://${host}:${port}`;
 
-    this.client = new MongoClient(url, {
-      useUnifiedTopology: true,
-    });
-
+    this.client = new MongoClient(url, { useUnifiedTopology: true });
     this.db = null;
 
-    this.client.connect()
-      .then(() => {
-        this.db = this.client.db(dbName);
-        console.log('MongoDB connection successful');
-      })
-      .catch((err) => {
-        console.error('MongoDB connection error:', err);
-        this.db = null;
-      });
+    this.connected = this.client.connect().then(() => {
+      this.db = this.client.db(dbName);
+    }).catch((err) => {
+      console.error('MongoDB connection error:', err);
+    });
   }
 
-  isAlive() {
+  async isAlive() {
+    await this.connected;
     return !!this.db;
   }
 
   async nbUsers() {
+    await this.connected;
     return this.db ? this.db.collection('users').countDocuments() : 0;
   }
 
   async nbFiles() {
+    await this.connected;
     return this.db ? this.db.collection('files').countDocuments() : 0;
-  }
-
-  async waitForConnection() {
-    const maxRetries = 20;
-    let retries = 0;
-
-    while (!this.isAlive() && retries < maxRetries) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      retries += 1;
-    }
-
-    if (!this.isAlive()) {
-      throw new Error('MongoDB connection failed after waiting');
-    }
   }
 }
 

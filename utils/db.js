@@ -1,4 +1,5 @@
 import { MongoClient } from 'mongodb';
+import { ObjectId } from 'mongodb';
 
 class DBClient {
   constructor() {
@@ -16,6 +17,15 @@ class DBClient {
       console.error('MongoDB connection error:', err);
     });
   }
+  
+  getObjectId(id) {
+    try {
+      return ObjectId(id);
+    } catch (e) {
+      return null;
+    }
+  }
+
 
   async isAlive() {
     await this.connected;
